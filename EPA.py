@@ -128,6 +128,10 @@ def return_EPA():
 
     train, validation, test = get_data()
 
+    used_attributes = ['age', 'checking_status', 'credit_history', 'duration',
+        'existing_credits', 'foreign_worker', 'job', 'num_dependents',
+        'other_parties', 'own_telephone', 'purpose', 'savings_status', 'class']
+
     st.markdown(
     '''
     ## The task
@@ -156,6 +160,9 @@ def return_EPA():
     Therefore, selecting many points with a high precision will give a high score. 
     '''
     )
+
+    st.dataframe(train[used_attributes].astype({'age':int,'duration':int,'existing_credits':int, 'num_dependents':int}).head())
+
 
     st.markdown(
     '''
@@ -203,7 +210,11 @@ def return_EPA():
         '''
         )
 
-        st.table(subgroups.to_df().drop(columns='quality'))
+        subgroups_df = subgroups.to_df().drop(columns='quality').rename(columns={'pattern':'Subgroup', 'target_evaluation':'% of Subgroup that Are Target Class', 'size':'Size'})
+        subgroups_df['% of Subgroup that Are Target Class'] = 100 * subgroups_df['% of Subgroup that Are Target Class']
+        subgroups_df.insert(0, 'id', ids)
+
+        st.table(subgroups_df.astype({'Size':int}).style.set_precision(2))
 
     else:
 
