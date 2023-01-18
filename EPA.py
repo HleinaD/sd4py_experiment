@@ -128,41 +128,79 @@ def return_EPA():
 
     train, validation, test = get_data()
 
-    used_attributes = ['age', 'checking_status', 'credit_history', 'duration',
+    used_attributes = ['age', 'checking_status', 'savings_status', 'credit_history', 'duration',
         'existing_credits', 'foreign_worker', 'job', 'num_dependents',
-        'other_parties', 'own_telephone', 'purpose', 'savings_status', 'class']
+        'other_parties', 'own_telephone', 'purpose', 'class']
 
     st.markdown(
     '''
     ## The task
 
-    Below, you will see subgroups used to analyse data from the Covid-19 (coronavirus) pandemic.
-
+    Below, you will see subgroups used to analyse data about bank loans. 
     The data being analysed is as folows. 
-    Each data point in the dataset represents a single month of data for some country,
-    and includes information like the average number of cases per day and the average 
-    number of hospital admissions. 
-    The subgroups all attempt to distinguish months belonging to the year 2022 (the most recent year) from 
-    months belonging to 2020 (when the pandemic first became global). Specifically, the subgroups
-    aim to find a description of points that belong to 2022. 
+    Each data point in the dataset represents a single loan,
+    and includes information like the purpose of the loan, the duration of the loan,
+    the amount of savings the borrower has, and so on.
+    The subgroups all attempt to distinguish loans that have been identified by experts 
+    as 'bad' credit risks from loans that have been identified as 'good' risks. 
     You will see subgroups that have been trained on a small subset of training data, 
     and will need to decide which ones you believe will perform well 
     on new data. 
-    Please note there is no 'ideal' subgroup that perfectly separates months belonging to
-    2020 from months belonging to 2022.
+    Please note there is no 'ideal' subgroup that perfectly separates 'bad' loans from 'good' loans. 
 
     To complete the task, you will choose the subgroup that you think will perform best,
     which will then be applied to  
     a previously-unseen 'test set' of data points. After submitting your choice,
     you will also be shown a score for how well the subgroup performs the task. 
-    The score will simply be the number of points (in the test set) identified by the subgroup 
-    that belong to the year 2022, minus the number of points from 2020 identified by the subgroup. 
+    The score will be the number of 'bad' loans included in the subgroup, multiplied by 3 to 
+    reflect the fact that bad loans are more rare, minus the number of 'good' loans included in the subgroup. 
     Therefore, selecting many points with a high precision will give a high score. 
     '''
     )
 
     st.dataframe(train[used_attributes].astype({'age':int,'duration':int,'existing_credits':int, 'num_dependents':int}).head())
 
+
+    attributes_descriptions = [
+        'Age in years',
+        "Status of the person's checking account, larger means the person has more money",
+        "Status of the person's savings account, larger means the person has more money",
+        'Information about the credit history',
+        'Duration in months',
+        'Number of existing loans/credits the person has',
+        'Whether the person is a foreign worker',
+        'Employment type of the person',
+        'Number of dependents (e.g. children) the person has',
+        'Whether there is a co-applicant or guarantor for the loan',
+        'Whether the individual currently has a telephone number',
+        'What the loan is going to be used for',
+        "Whether it is classes as a 'bad' loan or a 'good' loan. The target of the subgroup discovery task is to idenitfy bad loans."
+    ]
+
+    example_values = []
+
+    for col in used_attributes:
+
+        unique_values = np.unique(test.astype({'age':int,'duration':int,'existing_credits':int, 'num_dependents':int})[col]).astype(str).tolist()
+
+        if len(unique_values) > 5:
+
+            example_values.append(', '.join(unique_values[:5]) + ', ...')
+        
+        else:
+
+            example_values.append(', '.join(unique_values))
+
+    dataset_info = pd.concat(
+        [
+            pd.Series(used_attributes).rename('Column'),
+            pd.Series(attributes_descriptions).rename('Description'),
+            pd.Series(example_values).rename('Example values')
+        ],
+        axis=1
+    )
+
+    st.table(dataset_info)
 
     st.markdown(
     '''
