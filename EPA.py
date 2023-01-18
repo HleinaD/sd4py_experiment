@@ -3,12 +3,8 @@ import numpy as np
 import pandas as pd
 import re
 import streamlit as st
-from PIL import Image 
 import os 
 import matplotlib.pyplot as plt 
-import datetime as dt
-import sys 
-import csv
 import sd4py
 import sd4py_extra
 import warnings
@@ -16,24 +12,13 @@ import io
 import copy
 import datetime
 import pickle
+import scipy.io
 
 
 # %%
 
 
 # %%
-
-def data_loader():
-    found_files = []
-    cwd = os.getcwd()
-    for roots, dirs, files in sorted(os.walk(cwd)):
-        for filename in sorted(files):
-            if filename.endswith(".csv"):
-                found_files.append(os.path.join(roots,filename))
-    return found_files
-
-data = data_loader()
-data.insert(0,'Select a Dataset')
 
 def get_img_array_bytes(fig):
 
@@ -118,14 +103,28 @@ def return_EPA():
     @st.cache
     def get_data():
 
-        train = pd.read_csv('data/training.csv',index_col=0)
-        train['year'] = train['year'].astype(str)
-        validation = pd.read_csv('data/validation.csv',index_col=0)
-        validation['year'] = validation['year'].astype(str)
-        test = pd.read_csv('data/test.csv',index_col=0)
-        test['year'] = test['year'].astype(str)
+        credit_g = scipy.io.arff.loadarff('/home/daniel/Downloads/dataset_31_credit-g.arff')
+        credit_g = pd.DataFrame.from_records(credit_g[0])
 
-        return train, validation, test
+        for col in credit_g:
+
+            try:
+
+                credit_g[col] = credit_g[col].str.decode('utf-8')
+
+            except AttributeError:
+
+                pass
+
+        credit_g['class'] = credit_g['class'] + '_loan'
+
+        np.random.seed(42)
+        randomised_index = np.random.choice(np.arange(1000), 1000)
+        credit_g_train = credit_g.iloc[randomised_index[:250]]
+        credit_g_val = credit_g.iloc[randomised_index[250:500]]
+        credit_g_test = credit_g.iloc[randomised_index[500:]]
+
+        return credit_g_train, credit_g_val, credit_g_test
 
     train, validation, test = get_data()
 
@@ -171,111 +170,24 @@ def return_EPA():
     @st.cache
     def get_subgroups():
 
-        # subgroups = sd4py.PySubgroupResults(
-        #     [
-        #         sd4py.PySubgroup(
-        #             [
-        #                 sd4py.PyNumericSelector(
-        #                     'new_deaths_smoothed_average',
-        #                     1.0,
-        #                     np.Inf,
-        #                     False,
-        #                     False
-        #                 )
-        #             ],
-        #             100.0/130,
-        #             130,
-        #             100.0/130,
-        #             'year',
-        #             '2022'
-        #         ),
-        #         sd4py.PySubgroup(
-        #             [
-        #                 sd4py.PyNumericSelector(
-        #                     'new_deaths_smoothed_average',
-        #                     0.5,
-        #                     np.Inf,
-        #                     False,
-        #                     False
-        #                 ),
-        #                 sd4py.PyNumericSelector(
-        #                     'new_cases_smoothed_daily_change_average',
-        #                     -np.Inf,
-        #                     0.0,
-        #                     False,
-        #                     False
-        #                 )
-        #             ],
-        #             78.0/115,
-        #             115,
-        #             78.0/115,
-        #             'year',
-        #             '2022'
-        #         ),
-        #         sd4py.PySubgroup(
-        #             [
-        #                 sd4py.PyNumericSelector(
-        #                     'new_cases_smoothed_std',
-        #                     0.5,
-        #                     np.Inf,
-        #                     False,
-        #                     False
-        #                 )
-        #             ],
-        #             161.0/224,
-        #             224,
-        #             161.0/224,
-        #             'year',
-        #             '2022'
-        #         ),
-        #         sd4py.PySubgroup(
-        #             [
-        #                 sd4py.PyNumericSelector(
-        #                     'reproduction_rate_average',
-        #                     -np.Inf,
-        #                     1.0,
-        #                     False,
-        #                     False
-        #                 ),
-        #                 sd4py.PyNumericSelector(
-        #                     'new_cases_smoothed_average',
-        #                     1.0,
-        #                     np.Inf,
-        #                     False,
-        #                     False
-        #                 )
-        #             ],
-        #             72.0/81,
-        #             72,
-        #             72.0/81,
-        #             'year',
-        #             '2022'
-        #         ),
-        #     ], 
-        #     177.0 / 338, 
-        #     338, 
-        #     'year', 
-        #     '2022'
-        # )
-
-        with open('/home/daniel/Documents/private-EPA-2/experiment_drafting/covid_subgroups.pkl', 'rb') as f:
+        with open('/home/daniel/Documents/private-EPA-2/experiment_drafting/credit_g_subgroups.pkl', 'rb') as f:
             subgroup_list = pickle.load(f)
 
         subgroups = sd4py.PySubgroupResults(
             subgroup_list, 
-            177.0 / 338, 
-            338, 
-            'year', 
-            '2022'
+            1, 
+            1, 
+            'class', 
+            'bad_loan'
         )
 
-        return subgroups
+        return subgroups[:10]
 
     subgroups = get_subgroups()
 
 
     ## To make the subgroup names more readable
-    ids = ['*A*', '*B*', '*C*', '*D*', '*E*', '*F*', '*G*']
+    ids = ['*A*', '*B*', '*C*', '*D*', '*E*', '*F*', '*G*', '*H*', '*I*', '*J*', '*K*', '*L*', '*M*'][:len(subgroups)]
     labels = [re.sub('AND', '\nAND',str(key)) for key in subgroups]
     labels = ['({}) {}'.format(*vals) for vals in zip(ids, labels)]
 
@@ -309,8 +221,8 @@ def return_EPA():
         '''
         )
 
-        target = 'year'
-        target_value = '2022'
+        target = 'class'
+        target_value = 'bad_loan'
         target_nominal = True
 
         @st.cache(hash_funcs={pd.DataFrame: id, sd4py.PySubgroupResults:id})
@@ -371,7 +283,7 @@ def return_EPA():
         subgroups_bootstrap_top10.insert(0, 'id', ids)
         subgroups_selection = subgroups
 
-        st.table(subgroups_bootstrap_top10)
+        st.table(subgroups_bootstrap_top10.astype({'Size':int}).style.set_precision(2))
 
 
         st.markdown(
@@ -633,6 +545,10 @@ def return_EPA():
     answer_sg_options.insert(0, 'Choose the subgroup you think performs the task the best')
     answer_sg = st.selectbox('I think the best subgroup is: ', answer_sg_options)
     
+    if answer_sg == 'Choose the subgroup you think performs the task the best':
+
+        st.stop()
+
     if 'answer_submitted' not in st.session_state:
 
         st.session_state['answer_submitted'] = False
@@ -642,7 +558,7 @@ def return_EPA():
     if answer_submitted_button:
         st.session_state['answer_submitted'] = True
     
-    if not answer_submitted_button:
+    if not st.session_state['answer_submitted']:
         st.stop()
 
     st.markdown('This subgroup achieved a score of {}'.format(get_score(subgroups_selection[dict(zip(labels, list(range(10))))[answer_sg]])))
