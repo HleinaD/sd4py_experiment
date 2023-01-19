@@ -3,3 +3,6 @@ data/
 covid_subgroups (copy).pkl
 covid_subgroups.pkl
 requirements (copy).txt
+pseudonyms.txt
+get_pseudonyms.py
+EPA copy.py

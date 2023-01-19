@@ -895,7 +895,7 @@ def subgroup_overview(subgroup, selection_data, visualisation_data=None, use_com
     
     for selector in subgroup.selectors:
         
-        if isinstance(selector, sd4py.PyNumericSelector):
+        if isinstance(selector, sd4py.PyNumericSelector) or (type(selector).__name__ == 'PyNumericSelector'):
             
             numeric_selectors.append(selector.attribute)
         

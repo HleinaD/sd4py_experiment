@@ -37,7 +37,7 @@ def get_img_array_bytes(fig):
 
 def return_EPA():
 
-    st.title('Exploratory Pattern Analytics (EPA)')
+    st.title('Visualising Subgroups Research')
 
     st.markdown(
     '''
@@ -54,7 +54,7 @@ def return_EPA():
     and then will be asked to select the subgroup that you think is best for the task. 
     You will be given examples of how to calculate a score to rate 
     the performance of a subgroup. 
-    After submitting your choice of three subgroups, 
+    After submitting your choice of subgroup, 
     you will be given a score for the task. 
     Your score will be recorded as part of this study. 
     Your score will not count towards the grade you receive for any course 
@@ -249,7 +249,7 @@ def return_EPA():
         st.markdown(
         '''
         This table of results shows a list of subgroups, along with the size and precision 
-        (what proportion of the points selected by the pattern in fact belong to the target group) that were achieved
+        (what proportion of the points selected by the subgroup in fact belong to the target group) that were achieved
         by the subgroups on the training data. 
         '''
         )
@@ -267,11 +267,11 @@ def return_EPA():
         This table of results shows a list of subgroups, along with some measures of quality calculated against a validation data set 
         (not the data originally used to discover subgroups). 
         The percentage of subgroup members that belong to the target class is shown. 
-        This number, along with the size of the subgroup, is used to calculate the quality score of the pattern. 
-        For extra information, the precision (what proportion of the points selected by the pattern in fact belong to the target group), 
-        the recall (how much of the target group is selected by the pattern), 
+        This number, along with the size of the subgroup, is used to calculate the quality score of the subgroup. 
+        For extra information, the precision (what proportion of the points selected by the subgroup in fact belong to the target group), 
+        the recall (how much of the target group is selected by the subgroup), 
         and the F1-score (a combination of precision and recall) are provided as extra quality measures. 
-        For example, a precision of 0.6 means that 60% of the data points selected by the subgroup belong to the target class.  
+        For example, a precision of 0.6 means that 60% of the data points selected by the subgroup belong to the target class.
         Estimated 5% and 95% confidence intervals are shown for precision, recall and F-1.
         '''
         )
@@ -317,7 +317,7 @@ def return_EPA():
 
         #subgroups_bootstrap_top10, subgroups_selection, ids = get_top10_subgroups_selection_ids()
         subgroups_bootstrap_top10 = subgroups_bootstrap.copy().rename(columns={
-                    'pattern':'Pattern',
+                    'pattern':'Subgroup',
                     'size':'Size',
                     'quality':'Quality Score',
                     'target_evaluation':'% of Subgroup that Are Target Class',
@@ -347,8 +347,8 @@ def return_EPA():
 
         This is depicted through boxes in a box plot, with wider boxes in the (horizontal) x-direction implying greater variability. 
         The orange line shows the target value on average across different samples. 
-        How many points are selected by each pattern is also shown (i.e., its size), 
-        with thicker/taller boxes in the vertical direction meaning that a pattern selects a greater number of points on average.
+        How many points are selected by each subgroup is also shown (i.e., its size), 
+        with thicker/taller boxes in the vertical direction meaning that a subgroup selects a greater number of points on average.
         '''
         )
 
@@ -366,7 +366,7 @@ def return_EPA():
         @st.cache(hash_funcs={pd.DataFrame: id, sd4py.PySubgroupResults:id})
         def get_boxplots():
 
-            results_list = [results_dict[name] for name in subgroups_bootstrap_top10['Pattern']]
+            results_list = [results_dict[name] for name in subgroups_bootstrap_top10['Subgroup']]
 
             fig = plt.figure(dpi = 150)
             
@@ -485,22 +485,22 @@ def return_EPA():
 
     If you feel ready to choose a subgroup that you think best performs the task, 
     then please do so now. 
+
+    Remember that the score will be the number of 'bad' loans included in the subgroup, multiplied by 3 to 
+    reflect the fact that there are fewer bad loans, minus the number of 'good' loans included in the subgroup. 
     Please select your preferred subgroup from the drop-down list below, 
     and then click the button labelled 'Submit'.
+    
     Afterwards, you will be shown a score, and a hyperlink to an online questionnaire. 
     Please navigate to the hyperlink and fill in the questionnaire. 
     ''')
 
-    def get_score(answer_sg):
-
-        rows = answer_sg.get_rows(test)
-
-        return (3 * (rows[target] == target_value).sum()) - ((rows[target] != target_value).sum())
-    
     answer_sg_options = copy.deepcopy(labels)
     answer_sg_options.insert(0, 'Choose the subgroup you think performs the task the best')
     answer_sg = st.selectbox('I think the best subgroup is: ', answer_sg_options)
     
+    answer_submitted_button = st.button("Submit")
+
     if answer_sg == 'Choose the subgroup you think performs the task the best':
 
         st.stop()
@@ -508,8 +508,6 @@ def return_EPA():
     if 'answer_submitted' not in st.session_state:
 
         st.session_state['answer_submitted'] = False
-    
-    answer_submitted_button = st.button("Submit")
 
     if answer_submitted_button:
         st.session_state['answer_submitted'] = True
@@ -517,11 +515,24 @@ def return_EPA():
     if not st.session_state['answer_submitted']:
         st.stop()
 
-    st.markdown('This subgroup achieved a score of {}'.format(get_score(subgroups[dict(zip(labels, list(range(10))))[answer_sg]])))
+    rows = subgroups[dict(zip(labels, list(range(10))))[answer_sg]].get_rows(test)
+    points_selected = len(rows)
+    bad_loans_selected = (rows['class'] == 'bad_loan').sum()
+    good_loans_selected = (rows['class'] == 'good_loan').sum()
+    score = (3 * bad_loans_selected) - good_loans_selected
+
+    st.markdown('This subgroup achieved a score of {}'.format(score))
+
+    st.markdown('''
+    Explanation: The subgroup selects {0} out of 500 points in the test set. 
+    {1} of the points in the subgroup are 'bad' risks, the target class of the task.
+    {2} are not 'bad'. 
+    The score is (3 * {1}) - {2} == {3}
+    '''.format(points_selected, bad_loans_selected, good_loans_selected, score))
 
     st.markdown(
-    '''Please navigate to the following URL and answer the follow-on questionnaire: <https://www.survey.uni-osnabrueck.de/limesurvey/index.php/443113?Pseudonym={}>. 
-    '''.format(pseudonym)
+    '''Please navigate to the following URL and answer the follow-on questionnaire: <https://www.survey.uni-osnabrueck.de/limesurvey/index.php/443113?lang=en&Pseudonym={}&TaskScore={}>. 
+    '''.format(pseudonym, score)
     )
 
 return_EPA()
