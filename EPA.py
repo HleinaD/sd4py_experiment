@@ -100,7 +100,7 @@ def return_EPA():
     @st.cache
     def get_data():
 
-        credit_g = scipy.io.arff.loadarff('/home/daniel/Downloads/dataset_31_credit-g.arff')
+        credit_g = scipy.io.arff.loadarff(os.path.join(os.getcwd(),'dataset_31_credit-g.arff'))
         credit_g = pd.DataFrame.from_records(credit_g[0])
 
         for col in credit_g:
@@ -219,7 +219,7 @@ def return_EPA():
     @st.cache
     def get_subgroups():
 
-        with open('/home/daniel/Documents/private-EPA-2/experiment_drafting/credit_g_subgroups.pkl', 'rb') as f:
+        with open(os.path.join(os.getcwd(), 'credit_g_subgroups.pkl'), 'rb') as f:
             subgroup_list = pickle.load(f)
 
         subgroups = sd4py.PySubgroupResults(
