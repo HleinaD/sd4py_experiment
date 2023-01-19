@@ -141,6 +141,14 @@ def return_EPA():
     Each data point in the dataset represents a single loan,
     and includes information like the purpose of the loan, the duration of the loan,
     the amount of savings the borrower has, and so on.
+    Here are the first five rows from the training data. 
+    Also, further below, there are additional details about the columns used in the data.
+    ''')
+
+    st.dataframe(train[used_attributes].astype({'age':int,'duration':int,'existing_credits':int, 'num_dependents':int}).head())
+
+
+    st.markdown('''
     The subgroups all attempt to distinguish loans that have been identified by experts 
     as 'bad' credit risks from loans that have been identified as 'good' risks. 
     You will see subgroups that have been trained on a small subset of training data, 
@@ -149,16 +157,15 @@ def return_EPA():
     Please note there is no 'ideal' subgroup that perfectly separates 'bad' loans from 'good' loans. 
 
     To complete the task, you will choose the subgroup that you think will perform best,
-    which will then be applied to  
-    a previously-unseen 'test set' of data points. After submitting your choice,
+    which will then be applied to a previously-unseen 'test set' of data points. After submitting your choice,
     you will also be shown a score for how well the subgroup performs the task. 
     The score will be the number of 'bad' loans included in the subgroup, multiplied by 3 to 
     reflect the fact that bad loans are more rare, minus the number of 'good' loans included in the subgroup. 
     Therefore, selecting many points with a high precision will give a high score. 
+
+    For your reference, here are additional details about the columns used in the data:
     '''
     )
-
-    st.dataframe(train[used_attributes].astype({'age':int,'duration':int,'existing_credits':int, 'num_dependents':int}).head())
 
 
     attributes_descriptions = [
@@ -236,7 +243,9 @@ def return_EPA():
     labels = [re.sub('AND', '\nAND',str(key)) for key in subgroups]
     labels = ['({}) {}'.format(*vals) for vals in zip(ids, labels)]
 
-
+    target = 'class'
+    target_value = 'bad_loan'
+    target_nominal = True
 
     if first_letter == 'B':
 
@@ -269,10 +278,6 @@ def return_EPA():
         Estimated 5% and 95% confidence intervals are shown for precision, recall and F-1.
         '''
         )
-
-        target = 'class'
-        target_value = 'bad_loan'
-        target_nominal = True
 
         @st.cache(hash_funcs={pd.DataFrame: id, sd4py.PySubgroupResults:id})
         def get_bootstrap():
@@ -610,7 +615,7 @@ def return_EPA():
     if not st.session_state['answer_submitted']:
         st.stop()
 
-    st.markdown('This subgroup achieved a score of {}'.format(get_score(subgroups_selection[dict(zip(labels, list(range(10))))[answer_sg]])))
+    st.markdown('This subgroup achieved a score of {}'.format(get_score(subgroups[dict(zip(labels, list(range(10))))[answer_sg]])))
 
     st.markdown(
     '''Please navigate to the following URL and answer the follow-on questionnaire: <https://www.survey.uni-osnabrueck.de/limesurvey/index.php/443113?Pseudonym={}>. 
