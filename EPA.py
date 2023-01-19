@@ -1,4 +1,4 @@
-# %%
+
 import numpy as np
 import pandas as pd
 import re
@@ -14,11 +14,6 @@ import datetime
 import pickle
 import scipy.io
 
-
-# %%
-
-
-# %%
 
 def get_img_array_bytes(fig):
 
@@ -37,7 +32,7 @@ def get_img_array_bytes(fig):
 
     return img_arr, img_bytes
 
-# %%
+
 def return_EPA():
 
     st.title('Exploratory Pattern Analytics (EPA)')
@@ -625,4 +620,3 @@ def return_EPA():
 return_EPA()
 
 
-# %%
