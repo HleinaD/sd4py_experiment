@@ -14,6 +14,8 @@ import datetime
 import pickle
 import scipy.io
 
+pandas.set_option("display.precision", 2)
+
 
 def get_img_array_bytes(fig):
 
@@ -256,7 +258,7 @@ def return_EPA():
         subgroups_df['% of Subgroup that Are Target Class'] = 100 * subgroups_df['% of Subgroup that Are Target Class']
         subgroups_df.insert(0, 'id', ids)
 
-        st.table(subgroups_df.astype({'Size':int}).style.set_precision(2))
+        st.table(subgroups_df.astype({'Size':int}))
 
     else:
 
@@ -332,7 +334,7 @@ def return_EPA():
         subgroups_bootstrap_top10.insert(0, 'id', ids)
         subgroups_selection = subgroups
 
-        st.table(subgroups_bootstrap_top10.astype({'Size':int}).style.set_precision(2))
+        st.table(subgroups_bootstrap_top10.astype({'Size':int}))
 
 
         st.markdown(
@@ -385,8 +387,6 @@ def return_EPA():
 
         st.image(img_arr)
 
-        st.download_button('Save boxplots', img_bytes, file_name="{}_boxplots.png".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")), mime="image/png")
-
         st.markdown(
         '''
         ## Overlap between subgroups
@@ -431,8 +431,6 @@ def return_EPA():
         img_arr, img_bytes = get_jaccard_plot()
 
         st.image(img_arr)
-
-        st.download_button('Save network diagram', img_bytes, file_name="{}_network_diagram.png".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")), mime="image/png")
 
         st.markdown(
         '''
@@ -481,97 +479,6 @@ def return_EPA():
             img_arr, img_bytes = get_subgroup_overview()
 
             st.image(img_arr)
-
-            st.download_button('Save subgroup overview', img_bytes, file_name="{}_subgroup_overview.png".format(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")), mime="image/png")
-
-    # plt.rcParams["figure.figsize"] = saved_figsize
-
-    # if not isinstance(validation.index, pd.DatetimeIndex):
-
-    #     st.stop()
-    
-    # if analysis_type != 'Event detection':
-
-    #     st.stop()
-
-    # st.markdown(
-    # '''
-    # ## Specific subgroup members
-
-    # Finally, if the data comes from a process that happens over time, we can focus on particular moments at which a pattern occurs, 
-    # to see what happens to different variables before, during, and after. 
-    # After selecting a single pattern, you can now select a particular moment when the pattern occurs, 
-    # from the drop-down list below. 
-    # The target variable is shown, along with the other variables that are most clearly different between subgroup members 
-    # and non-members. The moment at which the pattern occurs is indicated by a red rectangle in the background. 
-    # '''
-    # )
-
-    # chosen_member_options = copy.deepcopy(chosen_sg.get_rows(dataset_production).index.tolist())
-    # chosen_member_options.insert(0, 'Choose a subgroup member to inspect')
-    # chosen_member = st.selectbox('Subgroup member to inspect: ', chosen_member_options)
-
-    # if chosen_member == 'Choose a subgroup member to inspect':
-    #     st.stop()
-
-    # before = st.number_input("Also display earlier time points that happened within: ", step=1, value=10, min_value=1)
-    # after = st.number_input("Also display later time points that happened within: ", step=1, value=10, min_value=1)
-
-    # before_after_unit = st.selectbox(
-    #     "Unit of time:",
-    #     ["", "Hours", "Minutes", "Seconds", "Milliseconds"],
-    #     key='before_after_unit'
-    # )
-
-    # if before_after_unit == '':
-    #     st.stop()
-
-    # @st.cache(hash_funcs={pd.DataFrame: id, sd4py.PySubgroupResults:id})
-    # def get_most_interesting():
-
-    #     most_interesting_numeric = sd4py_extra.most_interesting_columns(chosen_sg, dataset_production.drop(columns=chosen_sg.target))[0][:7]
-
-    #     return most_interesting_numeric.index
-
-    # most_interesting = get_most_interesting()
-
-    # fig = plt.figure(dpi = 150)
-
-    # start_time = chosen_member-pd.Timedelta(before, unit=before_after_unit.lower())
-    # end_time = chosen_member+pd.Timedelta(after, unit=before_after_unit.lower())
-
-    # iidx = dataset_production.index.get_loc(chosen_member)
-
-    # if iidx > 0: 
-    #     previous_time = dataset_production.index[iidx - 1]
-    #     if previous_time < start_time:
-    #         start_time = previous_time
-    # if iidx < (len(dataset_production) - 1):
-    #     next_time = dataset_production.index[iidx + 1]
-    #     if next_time > end_time:
-    #         end_time = next_time 
-
-    # sd4py_extra.time_plot(chosen_sg, dataset_production.loc[start_time:end_time], 
-    #     dataset_production[target].loc[start_time:end_time],
-    #     *[dataset_production[col].loc[start_time:end_time] for col in most_interesting],
-    #     window_size=1, use_start=True)
-
-    # fig.suptitle('Variables over time for ({})'.format(str(chosen_sg)), y=1.0, size =14)    
-
-    # fig.set_size_inches(18,20)
-    # plt.tight_layout()
-
-    # ## Convert to image to display
-
-    # img_arr, img_bytes = get_img_array_bytes(fig)
-
-    # st.image(img_arr)
-
-    # st.download_button('Save member time plot', img_bytes,
-    #     file_name="{}_time_plot_member_{}.png".format(
-    #         datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), 
-    #         '_'.join(str(dataset_production.index[iidx]).strip().split(' '))), 
-    #     mime="image/png")
 
     st.markdown('''
     ## Submit answer
