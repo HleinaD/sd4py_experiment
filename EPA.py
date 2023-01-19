@@ -14,7 +14,7 @@ import datetime
 import pickle
 import scipy.io
 
-pandas.set_option("display.precision", 2)
+pd.set_option("display.precision", 2)
 
 
 def get_img_array_bytes(fig):
